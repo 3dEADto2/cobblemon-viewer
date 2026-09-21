@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+/* https://visme.co/blog/website-color-schemes/   theme 12 */
+@theme {
+    --color-base: oklch(15.51% 0.0087 274.28);
+    --color-base-highlight: oklch(27.33% 0.0242 253.69);
+    --color-main: oklch(82.61% 0.0018 247.84);
+    --color-main-highlight: oklch(90.8% 0.1282 188.42);
+    --color-secondary: oklch(65.57% 0.0877 191.36);
+}

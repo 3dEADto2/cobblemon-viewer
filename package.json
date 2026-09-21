@@ -1,0 +1,42 @@
+{
+  "name": "cobblemon-viewer",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TresJS Vue application",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-brands-svg-icons": "^7.3.1",
+    "@fortawesome/free-regular-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/vue-fontawesome": "^3.3.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tresjs/cientos": "latest",
+    "@tresjs/core": "latest",
+    "@tresjs/leches": "latest",
+    "@tresjs/post-processing": "latest",
+    "jszip": "^3.10.2",
+    "tailwindcss": "^4.3.3",
+    "three": "latest",
+    "three-stdlib": "latest",
+    "vue": "latest",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@tresjs/eslint-config": "^1.4.0",
+    "@types/three": "latest",
+    "@vitejs/plugin-vue": "latest",
+    "eslint": "^9.36.0",
+    "typescript": "latest",
+    "vite": "latest",
+    "vite-plugin-glsl": "latest",
+    "vue-tsc": "latest"
+  }
+}
