@@ -8,35 +8,17 @@ import {
 
 import { ref, onMounted, inject, onUnmounted, type Ref, computed } from 'vue';
 
-const { options, keyVal, values, initValue } = defineProps<{
-    options: InputOptions;
-    keyVal?: string;
-    values?: (string | number)[];
-    initValue?: string | number;
+const { title, values } = defineProps<{
+    title?: string;
+    values?: any[];
 }>();
-
-const form = inject(options?.registerAt ?? '', null) as FormContext | null;
 
 const showDropDown = ref(false);
 
-const inputVal = ref<string | number>(
-    options.type === 'text'
-        ? initValue
-            ? initValue
-            : ''
-        : initValue
-          ? initValue
-          : 0,
-);
-
-const data: FormFieldData = {
-    key: keyVal ?? 'unknown',
-    value: inputVal,
-    updated: false,
-};
+const inputVal = ref<string | number>();
 
 const sortedValues = computed(() => {
-    if (options.type === 'text') {
+    if (typeof inputVal.value === 'string') {
         const toSearch = new RegExp(`^.*${inputVal.value}.*$`, 'im');
         return (values ?? []).filter(
             (el) => typeof el === 'string' && toSearch.test(el),
@@ -47,41 +29,35 @@ const sortedValues = computed(() => {
 });
 
 const emit = defineEmits<{
-    (e: 'update', data: string | number): void;
+    (e: 'update', data: string | number | undefined): void;
 }>();
 
 const checkBtnHandler = () => {
     if (!inputVal.value) return;
 
     emit('update', inputVal.value);
-    inputVal.value = options.type === 'text' ? '' : 0;
+    inputVal.value = typeof inputVal.value === 'number' ? 0 : '';
 };
 
 onMounted(() => {
-    if (!form) return;
-    form.register(data);
-});
-
-onUnmounted(() => {
-    if (!form) return;
-    form.unregister(data);
+    const valuesIsNum = values?.every((el) => typeof el === 'number');
+    inputVal.value = valuesIsNum ? 0 : '';
 });
 </script>
 
 <template>
     <div class="flex flex-col border border-secondary rounded py-1 gap-1">
         <div class="flex gap-2 px-1">
-            <h4 v-if="keyVal" class="font-semibold">{{ keyVal }}:</h4>
+            <h4 v-if="title" class="font-semibold">{{ title }}:</h4>
             <input
-                :type="options.type === 'text' ? 'text' : 'number'"
+                :type="typeof inputVal === 'string' ? 'text' : 'number'"
                 step="any"
                 v-model="inputVal"
-                @input="data.updated = true"
+                @input="emit('update', inputVal)"
                 class="grow outline-none bg-main/10"
             />
             <div class="flex gap-1">
                 <button
-                    v-if="!form"
                     type="button"
                     class="size-fit cursor-pointer active:text-green-700"
                     @click="checkBtnHandler()"
@@ -119,7 +95,7 @@ onUnmounted(() => {
                 @click="
                     inputVal = value;
                     showDropDown = false;
-                    data.updated = true;
+                    emit('update', inputVal);
                 "
                 class="hover:underline cursor-pointer"
                 :class="{ 'bg-white/5': index % 2 }"

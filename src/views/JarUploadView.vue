@@ -2,8 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import JSZip from 'jszip';
 import { JsonMerger, type JsonMergerResult } from './../utils/jsonMerger';
-import FormWrapper from './../components/FormWrapper.vue';
-import JsonSelecetion from './../components/JsonSelection.vue';
+import JsonSearchMask from './../components/JsonSearchMask.vue';
 
 interface FolderNode {
     path: string;
@@ -21,10 +20,9 @@ const getFolderName = (path: string) => {
     return path.slice(index + 1);
 };
 
-const jsonMerger = new JsonMerger();
 let zip = new JSZip();
 
-const jsonMergerResult = ref<JsonMergerResult>({});
+const jsonSearchMaskMerger = ref<JsonMerger>();
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const addToTree = (segments: string[], root: FolderTree = {}) => {
@@ -161,11 +159,10 @@ const getAllJson = async (paths: string[]) => {
 const onBlueprintCreateSubmit = async (folderPath: string) => {
     const jsonPaths = getAllJsonPaths(folderPath);
     const jsons = await getAllJson(jsonPaths);
+    const jsonMerger = new JsonMerger();
     jsonMerger.addJsons(jsons);
 
-    console.log(jsonMerger.Result);
-    const initObject = jsonMerger.createInitialModel(jsonMerger.Result);
-    console.log(initObject);
+    jsonSearchMaskMerger.value = jsonMerger;
 };
 
 onMounted(() => {
@@ -251,6 +248,9 @@ onMounted(() => {
             <input :value="selectFolderTreePathStr" disabled />
             <button type="submit">SELECT FOLDER</button>
         </form>
-        <h1>DUMMY</h1>
+        <JsonSearchMask
+            v-if="jsonSearchMaskMerger"
+            :json-merger="jsonSearchMaskMerger"
+        />
     </div>
 </template>
