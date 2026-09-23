@@ -188,7 +188,7 @@ export class JsonMerger {
         }
 
         if (type === 'array') {
-            return [];
+            return [] as any[];
         }
 
         return undefined;

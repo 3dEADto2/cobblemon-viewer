@@ -8,37 +8,22 @@ import {
     type InputOptions,
 } from './../types';
 
-const { keyVal, initValue, options } = defineProps<{
-    options: InputOptions;
-    keyVal?: string;
-    initValue?: boolean;
+const { title } = defineProps<{
+    title?: string;
 }>();
 
-const form = inject(options?.registerAt ?? '', null) as FormContext | null;
+const inputVal = ref(false);
 
-const inputVal = ref(initValue ? true : false);
-const data: FormFieldData = {
-    key: keyVal ?? 'unknown',
-    value: inputVal,
-    updated: false,
-};
-
-onMounted(() => {
-    if (!form) return;
-    form.register(data);
-});
-
-onUnmounted(() => {
-    if (!form) return;
-    form.unregister(data);
-});
+const emit = defineEmits<{
+    (e: 'update', data: boolean): void;
+}>();
 </script>
 
 <template>
     <div
         class="flex items-center border border-secondary rounded px-1 gap-1 w-fit"
     >
-        <p class="font-semibold">{{ keyVal }}:</p>
+        <p class="font-semibold">{{ title }}:</p>
         <div
             class="relative flex justify-center items-center size-fit cursor-pointer"
         >
@@ -49,7 +34,7 @@ onUnmounted(() => {
             <input
                 type="checkbox"
                 v-model="inputVal"
-                @change="data.updated = true"
+                @change="emit('update', inputVal)"
                 class="absolute size-full cursor-pointer opacity-0"
             />
         </div>

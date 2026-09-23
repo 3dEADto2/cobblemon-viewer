@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import SearchDropDown from './SearchDropDown.vue';
 import CheckboxInput from './CheckboxInput.vue';
-import ObjectSelect from './ObjectSelect.vue';
 import {
     type JsonMergerResult,
     type SchemaNode,
@@ -9,26 +8,25 @@ import {
 } from './../utils/jsonMerger';
 import { unref } from 'vue';
 
-const { jsonMerger } = defineProps<{
+const { parentNode, title, jsonMerger, parentResultModel } = defineProps<{
+    parentNode: SchemaNode;
+    parentResultModel: Record<string, any>;
     jsonMerger: JsonMerger;
+    title?: string;
 }>();
 
-const resultModel = jsonMerger.createInitialModel(jsonMerger.Result);
-console.log(resultModel);
+console.log(parentNode, parentResultModel);
 </script>
 
 <template>
     <div>
         <div>
-            <h1>CardHeader</h1>
-            <button @click="console.log(resultModel, jsonMerger.Result)">
-                CLICKME
-            </button>
+            <h1>{{ title }}</h1>
         </div>
-        <div class="flex flex-col gap-1">
+        <div v-if="parentNode.properties" class="flex flex-col gap-1">
             <template
                 v-for="([schemaKey, schemaNode], index) of Object.entries(
-                    jsonMerger.Result,
+                    parentNode.properties,
                 ).sort(([aKey, _a], [bKey, _b]) => (aKey > bKey ? 1 : -1))"
             >
                 <SearchDropDown
@@ -39,19 +37,19 @@ console.log(resultModel);
                     "
                     :title="schemaKey"
                     :values="Array.from(schemaNode.values!)"
-                    @update="(input) => (resultModel[schemaKey] = input)"
+                    @update="(input) => (parentResultModel[schemaKey] = input)"
                 />
                 <CheckboxInput
                     v-if="schemaNode.type === 'boolean'"
                     :title="schemaKey"
-                    @update="(input) => (resultModel[schemaKey] = input)"
+                    @update="(input) => (parentResultModel[schemaKey] = input)"
                 />
                 <ObjectSelect
                     v-if="schemaNode.type === 'object'"
-                    :title="schemaKey"
                     :json-merger="jsonMerger"
                     :parent-node="schemaNode"
-                    :parent-result-model="resultModel[schemaKey]"
+                    :parent-result-model="parentResultModel[schemaKey]"
+                    :title="schemaKey"
                 />
             </template>
         </div>
