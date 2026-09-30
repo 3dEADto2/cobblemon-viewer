@@ -1,0 +1,13 @@
+<script lang="ts" setup>
+import JsonSearchMask from './JsonSearchMask.vue';
+</script>
+
+<template>
+    <div>
+        <h1>Filter Maske</h1>
+    </div>
+    <JsonSearchMask
+        v-if="jsonSearchMaskMerger"
+        :json-merger="jsonSearchMaskMerger"
+    />
+</template>

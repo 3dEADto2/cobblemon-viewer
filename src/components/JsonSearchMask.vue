@@ -2,6 +2,7 @@
 import SearchDropDown from './SearchDropDown.vue';
 import CheckboxInput from './CheckboxInput.vue';
 import ObjectSelect from './ObjectSelect.vue';
+import MultiSelect from './MultiSelect.vue';
 import {
     type JsonMergerResult,
     type SchemaNode,
@@ -13,17 +14,23 @@ const { jsonMerger } = defineProps<{
     jsonMerger: JsonMerger;
 }>();
 
+const emit = defineEmits<{
+    (e: 'submit', data: { isEmpty: boolean; model: any }): void;
+}>();
+
 const resultModel = jsonMerger.createInitialModel(jsonMerger.Result);
-console.log(resultModel);
+
+const submit = () => {
+    const cleaned = jsonMerger.removeUnusedFromModel(resultModel);
+    emit('submit', cleaned);
+};
 </script>
 
 <template>
     <div>
         <div>
             <h1>CardHeader</h1>
-            <button @click="console.log(resultModel, jsonMerger.Result)">
-                CLICKME
-            </button>
+            <button @click="submit()">submit</button>
         </div>
         <div class="flex flex-col gap-1">
             <template
@@ -39,6 +46,7 @@ console.log(resultModel);
                     "
                     :title="schemaKey"
                     :values="Array.from(schemaNode.values!)"
+                    :on-key-stroke="true"
                     @update="(input) => (resultModel[schemaKey] = input)"
                 />
                 <CheckboxInput
@@ -52,6 +60,13 @@ console.log(resultModel);
                     :json-merger="jsonMerger"
                     :parent-node="schemaNode"
                     :parent-result-model="resultModel[schemaKey]"
+                />
+                <MultiSelect
+                    v-if="schemaNode.type === 'array'"
+                    :title="schemaKey"
+                    :schema-node="schemaNode"
+                    :result-model="resultModel[schemaKey]"
+                    :json-merger="jsonMerger"
                 />
             </template>
         </div>

@@ -8,9 +8,10 @@ import {
 
 import { ref, onMounted, inject, onUnmounted, type Ref, computed } from 'vue';
 
-const { title, values } = defineProps<{
+const { title, values, onKeyStroke } = defineProps<{
     title?: string;
     values?: any[];
+    onKeyStroke?: boolean;
 }>();
 
 const showDropDown = ref(false);
@@ -39,25 +40,38 @@ const checkBtnHandler = () => {
     inputVal.value = typeof inputVal.value === 'number' ? 0 : '';
 };
 
-onMounted(() => {
-    const valuesIsNum = values?.every((el) => typeof el === 'number');
-    inputVal.value = valuesIsNum ? 0 : '';
-});
+const inputHandler = () => {
+    if (!onKeyStroke) return;
+    if (inputVal.value === '') {
+        inputVal.value = undefined;
+    }
+
+    emit('update', inputVal.value);
+};
 </script>
 
 <template>
-    <div class="flex flex-col border border-secondary rounded py-1 gap-1">
+    <div
+        class="flex flex-col border rounded py-1 gap-1"
+        :class="{
+            'border-secondary':
+                !onKeyStroke || inputVal === undefined || inputVal === '',
+            'border-green-500':
+                onKeyStroke && inputVal !== undefined && inputVal !== '',
+        }"
+    >
         <div class="flex gap-2 px-1">
             <h4 v-if="title" class="font-semibold">{{ title }}:</h4>
             <input
-                :type="typeof inputVal === 'string' ? 'text' : 'number'"
+                :type="typeof inputVal === 'number' ? 'number' : 'text'"
                 step="any"
                 v-model="inputVal"
-                @input="emit('update', inputVal)"
+                @input="inputHandler()"
                 class="grow outline-none bg-main/10"
             />
             <div class="flex gap-1">
                 <button
+                    v-if="!onKeyStroke"
                     type="button"
                     class="size-fit cursor-pointer active:text-green-700"
                     @click="checkBtnHandler()"

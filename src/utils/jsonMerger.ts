@@ -193,4 +193,63 @@ export class JsonMerger {
 
         return undefined;
     }
+
+    public removeUnusedFromModel(model: Record<string, any>) {
+        const copy = JSON.parse(JSON.stringify(model));
+
+        Object.entries(copy).forEach(([key, value]) => {
+            if (value === null || value === undefined) {
+                delete copy[key];
+            } else if (Array.isArray(value)) {
+                const filtered = this.removeUnusedFromArray(value);
+
+                if (filtered.isEmpty) {
+                    delete copy[key];
+                } else {
+                    copy[key] = filtered.array;
+                }
+            } else if (typeof value === 'object') {
+                const result = this.removeUnusedFromModel(value);
+                if (result.isEmpty) {
+                    delete copy[key];
+                } else {
+                    copy[key] = result.model;
+                }
+            }
+        });
+
+        return {
+            isEmpty: !Object.keys(copy).length,
+            model: copy,
+        };
+    }
+
+    private removeUnusedFromArray(array: any[]) {
+        const filtered: any[] = [];
+
+        array.forEach((el) => {
+            if (
+                typeof el === 'string' ||
+                typeof el === 'number' ||
+                typeof el === 'boolean'
+            ) {
+                filtered.push(el);
+            } else if (
+                el !== null &&
+                !Array.isArray(el) &&
+                typeof el === 'object'
+            ) {
+                const result = this.removeUnusedFromModel(el);
+                if (!result.isEmpty) filtered.push(result.model);
+            } else if (Array.isArray(el)) {
+                const result = this.removeUnusedFromArray(el);
+                if (!result.isEmpty) filtered.push(result.array);
+            }
+        });
+
+        return {
+            isEmpty: !filtered.length,
+            array: filtered,
+        };
+    }
 }
