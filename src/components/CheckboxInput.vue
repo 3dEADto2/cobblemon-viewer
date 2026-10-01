@@ -21,7 +21,7 @@ const emit = defineEmits<{
 
 <template>
     <div
-        class="flex items-center border border-secondary rounded px-1 gap-1 w-fit"
+        class="flex items-center border border-secondary rounded px-1 gap-1 w-fit h-fit"
     >
         <p class="font-semibold">{{ title }}:</p>
         <div

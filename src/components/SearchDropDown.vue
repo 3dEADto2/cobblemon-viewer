@@ -52,7 +52,7 @@ const inputHandler = () => {
 
 <template>
     <div
-        class="flex flex-col border rounded py-1 gap-1"
+        class="flex flex-col border rounded py-1 gap-1 h-fit"
         :class="{
             'border-secondary':
                 !onKeyStroke || inputVal === undefined || inputVal === '',

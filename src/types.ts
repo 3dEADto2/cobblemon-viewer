@@ -112,3 +112,12 @@ export interface FormFieldData {
     updated: boolean;
     value: any;
 }
+
+export type SearchParameters =
+    | {
+          operator: 'equals' | 'notEquals' | 'gt' | 'gte' | 'lt' | 'lte';
+          value: number;
+      }
+    | { operator: 'equals' | 'notEquals' | 'includes' | 'regex'; value: string }
+    | { operator: 'equals' | 'notEquals'; value: boolean }
+    | { operator: 'every' | 'some' | 'none'; value: any[] };

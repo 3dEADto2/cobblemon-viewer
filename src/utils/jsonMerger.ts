@@ -187,10 +187,6 @@ export class JsonMerger {
             return initModel;
         }
 
-        if (type === 'array') {
-            return [] as any[];
-        }
-
         return undefined;
     }
 

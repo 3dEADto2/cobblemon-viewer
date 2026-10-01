@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { JsonMerger, type JsonMergerResult } from './../utils/jsonMerger';
 import { JsonHandler } from './../utils/jsonHandler';
 import JsonSearchMask from './../components/JsonSearchMask.vue';
+import JSSearchMask from './../components/JsonSearch/JSSearchMask.vue';
 import ZipNavigator from './../components/ZipNavigator.vue';
 import ZipManager from './../utils/zipManager';
 
@@ -49,7 +50,7 @@ onMounted(() => {});
 <template>
     <ZipNavigator @folder-select="zipFolderSelectHandler" />
     <button type="button" @click="buildJsonSchema()">BuildJsonSchema</button>
-    <JsonSearchMask
+    <JSSearchMask
         v-if="jsonHandler"
         :json-merger="jsonHandler.getJsonMerger()"
         @submit="onFilterSubmit"

@@ -10,13 +10,17 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { ref, onMounted, inject, onUnmounted, type Ref, computed } from 'vue';
 import { type FormContext, type FormFieldData } from './../types';
 
-const { schemaNode, resultModel, jsonMerger, title } = defineProps<{
+const { schemaNode, jsonMerger, title } = defineProps<{
     title?: string;
     schemaNode: SchemaNode;
-    resultModel: any[];
     jsonMerger: JsonMerger;
 }>();
 
+const emit = defineEmits<{
+    (e: 'update', data: any[] | undefined): void;
+}>();
+
+let childModel: Record<string, any> | undefined = undefined;
 const created = ref<{ _id: string; data: any }[]>([]);
 const shownIndex = ref(0);
 
@@ -25,10 +29,12 @@ const searchDropDownHandler = (input: string | number | undefined) => {
         _id: crypto.randomUUID(),
         data: input,
     });
-    resultModel.push(input);
-};
 
-let childModel: Record<string, any> | undefined = undefined;
+    emit(
+        'update',
+        created.value.map((el) => el.data),
+    );
+};
 
 const addObjectSelect = () => {
     if (!childModel) return;
@@ -38,7 +44,11 @@ const addObjectSelect = () => {
         _id: crypto.randomUUID(),
         data: newChildModel,
     });
-    resultModel.push(newChildModel);
+
+    emit(
+        'update',
+        created.value.map((el) => el.data),
+    );
 
     shownIndex.value = created.value.length - 1;
 };
@@ -49,25 +59,14 @@ const removeItem = (index: number) => {
     }
 
     created.value.splice(index, 1);
-    resultModel.splice(index, 1);
-};
 
-const onObjectSubmit = (submitData: Set<FormFieldData>) => {};
+    let result = undefined;
 
-const onDropDownSubmit = (submitData: string | number) => {};
-
-const selectedDisplay = (val: any) => {
-    if (typeof val === 'string' || typeof val === 'number') {
-        return val;
+    if (created.value.length) {
+        result = created.value.map((el) => el.data);
     }
 
-    try {
-        const jsonText = JSON.stringify(val);
-        return jsonText;
-    } catch (e) {
-        console.error(`MultiSelect json stringify error:`, e);
-        return 'JSON ERROR';
-    }
+    emit('update', result);
 };
 
 onMounted(() => {
@@ -111,10 +110,7 @@ onMounted(() => {
                         v-for="(item, index) of created"
                         class="border border-green-500 rounded px-1 cursor-pointer hover:border-red-500 hover:line-through max-w-30 truncate"
                         type="button"
-                        @click="
-                            created.splice(index, 1);
-                            resultModel.splice(index, 1);
-                        "
+                        @click="created.splice(index, 1)"
                     >
                         {{ item.data }}
                     </button>
