@@ -11,24 +11,39 @@ import { unref, ref } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { SearchParameters } from 'src/types.js';
 
-const { parentNode, title, jsonMerger, parentResultModel, canBeDestroyed } =
+const { parentNode, title, jsonMerger, canBeDestroyed } =
     defineProps<{
         parentNode: SchemaNode;
-        parentResultModel: Record<string, any>;
         jsonMerger: JsonMerger;
         title?: string;
         canBeDestroyed?: boolean;
     }>();
 
-const btnCloseHover = ref(false);
-const isShown = ref(canBeDestroyed ? true : false);
-
 const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'open'): void;
+    (e: 'update', data: Record<string, any> | undefined): void;
 }>();
 
-// TODO: should also return {} or undefined for consitency
+const btnCloseHover = ref(false);
+const isShown = ref(canBeDestroyed ? true : false);
+
+const selectedValue:Record<string, any> = {};
+
+const onChildUpdate = (input: SearchParameters | undefined | Record<string, any>, key: string) => {
+    if (input === undefined) {
+        delete selectedValue[key];
+    } else {
+        selectedValue[key] = input;
+    }
+
+    if (Object.keys(selectedValue).length === 0) {
+        emit('update', undefined);
+    } else {
+        emit('update', selectedValue);
+    }
+}
+
 </script>
 
 <template>
@@ -88,35 +103,26 @@ const emit = defineEmits<{
                     :title="schemaKey"
                     :values="Array.from(schemaNode.values!)"
                     :on-key-stroke="true"
-                    @update="
-                        (input: SearchParameters | undefined) =>
-                            (parentResultModel[schemaKey] = input)
-                    "
+                    @update="(input: SearchParameters | undefined) => onChildUpdate(input, schemaKey)"
                 />
                 <JSCheckbox
                     v-if="schemaNode.type === 'boolean'"
                     :title="schemaKey"
-                    @update="
-                        (input: SearchParameters | undefined) =>
-                            (parentResultModel[schemaKey] = input)
-                    "
+                    @update="(input: SearchParameters | undefined) => onChildUpdate(input, schemaKey)"
                 />
                 <JSObjectSelect
                     v-if="schemaNode.type === 'object'"
                     :json-merger="jsonMerger"
                     :parent-node="schemaNode"
-                    :parent-result-model="parentResultModel[schemaKey]"
                     :title="schemaKey"
+                    @update="(input: Record<string, any> | undefined) => onChildUpdate(input, schemaKey)"
                 />
                 <JSMultiSelect
                     v-if="schemaNode.type === 'array'"
                     :title="schemaKey"
                     :schema-node="schemaNode"
                     :json-merger="jsonMerger"
-                    @update="
-                        (input: SearchParameters | undefined) =>
-                            (parentResultModel[schemaKey] = input)
-                    "
+                    @update="(input: SearchParameters | undefined) => onChildUpdate(input, schemaKey)"
                 />
             </template>
         </div>

@@ -12,24 +12,26 @@ const { title } = defineProps<{
     title?: string;
 }>();
 
-const inputVal = ref(false);
-
 const emit = defineEmits<{
     (e: 'update', data: boolean): void;
 }>();
+
+const inputVal = ref(false);
+
+// TODO: should also be possible to return undefined, maybe something like checkmark, X, blank
 </script>
 
 <template>
     <div
-        class="flex items-center border border-secondary rounded px-1 gap-1 w-fit h-fit"
+        class="flex items-center border border-secondary rounded p-1 gap-1 w-fit h-fit"
     >
         <p class="font-semibold">{{ title }}:</p>
         <div
             class="relative flex justify-center items-center size-fit cursor-pointer"
         >
             <FontAwesomeIcon
-                class="text-xl"
-                :icon="inputVal ? 'fa-solid fa-check' : 'fa-solid fa-xmark'"
+                class="text-2xl"
+                :icon="inputVal ? 'fa-solid fa-square-check' : 'fa-solid fa-square'"
             />
             <input
                 type="checkbox"

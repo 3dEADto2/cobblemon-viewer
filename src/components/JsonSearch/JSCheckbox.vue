@@ -48,7 +48,7 @@ const onOperatorHandler = (data: string | number | undefined) => {
         <SearchDropDown
             :title="'SearchParameter'"
             :values="operatorValues"
-            :on-key-stroke="true"
+            :options="{ inputDisabled: true }"
             @update="onOperatorHandler"
         />
     </div>

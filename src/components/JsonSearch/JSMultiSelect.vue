@@ -3,13 +3,10 @@ import JSDropDown from './JSDropDown.vue';
 import SearchDropDown from './../SearchDropDown.vue';
 import JSObjectSelect from './JSObjectSelect.vue';
 import { JsonMerger, type SchemaNode } from './../../utils/jsonMerger.js';
-import Utils from './../../utils/utils';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-import { ref, onMounted, inject, onUnmounted, type Ref, computed } from 'vue';
+import { ref, computed } from 'vue';
 import {
-    type FormContext,
-    type FormFieldData,
     type SearchParameters,
 } from './../../types';
 
@@ -19,32 +16,39 @@ const { schemaNode, jsonMerger, title } = defineProps<{
     jsonMerger: JsonMerger;
 }>();
 
-const operatorValues = ['every', 'some', 'none'];
-const operatorValue = ref<string | undefined>();
-const selectedValue = ref<{ _id: string; data: any }[]>([]);
-let childModel: Record<string, any> | undefined = undefined;
-const shownIndex = ref(0);
-
 const emit = defineEmits<{
     (e: 'update', data: SearchParameters | undefined): void;
 }>();
 
-const updateHandler = () => {
-    let result = undefined;
+const operatorValues = ['every', 'some', 'none'];
+const operatorValue = ref<string | undefined>();
 
-    if (
+const selectedValue = ref<Map<string, any>>(new Map());
+const shownSelectedKey = ref<string | undefined>();
+
+const validSelectedValue = computed(() => {
+    return Array.from(selectedValue.value.values()).filter((el) => el !== undefined && el !== null);
+})
+
+const isValid = computed(() => {
+    return (
         operatorValues.includes(operatorValue.value ?? '') &&
-        selectedValue.value.length
-    ) {
+        validSelectedValue.value.length > 0
+    );
+})
+
+const updateHandler = () => {
+    let result: SearchParameters | undefined = undefined;
+
+    if (isValid.value) {
         result = {
             operator: operatorValue.value,
-            value: selectedValue.value.map((el) => el.data),
-        } as SearchParameters;
+            value: validSelectedValue.value
+        } as SearchParameters
     }
 
-    console.log(result, selectedValue.value);
     emit('update', result);
-};
+}
 
 const onOperatorHandler = (data: string | number | undefined) => {
     operatorValue.value = typeof data === 'number' ? undefined : data;
@@ -52,137 +56,118 @@ const onOperatorHandler = (data: string | number | undefined) => {
     updateHandler();
 };
 
-const searchDropDownHandler = (input: SearchParameters | undefined) => {
-    if (!input) return;
-
-    selectedValue.value.push({
-        _id: crypto.randomUUID(),
-        data: input,
-    });
+const addSelectedValue = (data: any) => {
+    const key = crypto.randomUUID();
+    selectedValue.value.set(key, data);
+    shownSelectedKey.value = key;
 
     updateHandler();
-};
+}
 
-const addObjectSelect = () => {
-    if (!childModel) return;
-
-    const newChildModel = JSON.parse(JSON.stringify(childModel));
-    selectedValue.value.push({
-        _id: crypto.randomUUID(),
-        data: newChildModel,
-    });
-
-    updateHandler();
-
-    shownIndex.value = selectedValue.value.length - 1;
-};
-
-const removeItem = (index: number) => {
-    if (index >= selectedValue.value.length - 1) {
-        shownIndex.value = index - 1;
+const removeSelectedValue = (key: string) => {
+    selectedValue.value.delete(key);
+    if (shownSelectedKey.value === key) {
+        shownSelectedKey.value = selectedValue.value.keys().next().value;
     }
 
-    selectedValue.value.splice(index, 1);
+    updateHandler();
+}
+
+const dropDownAddHandler = (data: SearchParameters | undefined) => {
+    if (!data) return;
+    addSelectedValue(data);
 
     updateHandler();
-};
+}
 
-onMounted(() => {
-    if (schemaNode.items?.type === 'object' && schemaNode.items) {
-        const result = jsonMerger.createModelBySchemaNode(schemaNode.items);
+const onObjectUpdateHandler = (key: string, data: Record<string, any> | undefined) => {
+    selectedValue.value.set(key, data);
 
-        if (!Array.isArray(result)) {
-            childModel = result;
-        }
-    }
-});
+    updateHandler();
+}
 </script>
 
 <template>
-    <div class="flex gap-1">
-        <div class="border border-secondary rounded">
-            <div
-                class="flex gap-1 items-center border-b border-r border-secondary rounded-br w-fit px-1 text-lg font-semibold"
+    <div class="border rounded" :class="{ 'border-green-500': isValid, 'border-secondary': !isValid }">
+        <div
+            class="flex gap-1 items-center border-b border-r border-secondary rounded-br w-fit text-lg font-semibold"
+        >
+            <SearchDropDown
+                class="border-none"
+                :title="title"
+                :values="operatorValues"
+                :options="{ inputDisabled: true }"
+                @update="onOperatorHandler"
+            />
+            <button
+                v-if="schemaNode.items?.type === 'object'"
+                type="button"
+                class="cursor-pointer px-1"
+                @click="addSelectedValue(undefined)"
             >
-                <h4>
-                    {{ title }}
-                </h4>
-                <button
-                    v-if="schemaNode.items?.type === 'object'"
-                    type="button"
-                    class="cursor-pointer"
-                    @click="addObjectSelect()"
-                >
-                    <FontAwesomeIcon class="text-xl" icon="fa-solid fa-plus" />
-                </button>
-            </div>
-            <div class="flex flex-col gap-1 p-3">
-                <template
+                <FontAwesomeIcon class="text-xl" icon="fa-solid fa-plus" />
+            </button>
+        </div>
+        <div class="flex flex-col gap-1 p-3">
+            <template
+                v-if="
+                    schemaNode.items?.type === 'number' ||
+                    schemaNode.items?.type === 'string' ||
+                    schemaNode.items?.type === 'number_or_string'
+                "
+            >
+                <div class="flex gap-1 flex-wrap">
+                    <button
+                        v-for="([mapKey, mapValue], index) of Array.from(selectedValue.entries())"
+                        :key="mapKey"
+                        class="border border-green-500 rounded px-1 cursor-pointer hover:border-red-500 hover:line-through max-w-30 truncate"
+                        type="button"
+                        @click="removeSelectedValue(mapKey)"
+                    >
+                        {{ mapValue}}
+                    </button>
+                </div>
+                <JSDropDown
                     v-if="
                         schemaNode.items?.type === 'number' ||
                         schemaNode.items?.type === 'string' ||
                         schemaNode.items?.type === 'number_or_string'
                     "
+                    :type="schemaNode.items.type"
+                    :values="Array.from(schemaNode.items?.values ?? [])"
+                    @update="dropDownAddHandler"
+                />
+            </template>
+            <template v-if="schemaNode.items?.type === 'object'">
+                <div class="flex gap-1">
+                    <button
+                        v-for="([mapKey, mapValue], index) of Array.from(selectedValue.entries())"
+                        :key="mapKey"
+                        :class="{
+                            'border-green-500': mapKey === shownSelectedKey,
+                            'border-secondary': mapKey !== shownSelectedKey,
+                        }"
+                        class="border rounded px-2 cursor-pointer hover:border-green-500"
+                        type="button"
+                        @click="shownSelectedKey = mapKey"
+                    >
+                        {{ index + 1 }}
+                    </button>
+                </div>
+                <template
+                    v-for="([mapKey, mapValue], index) of Array.from(selectedValue.entries())"
+                    :key="mapKey"
                 >
-                    <div class="flex gap-1">
-                        <button
-                            v-for="(item, index) of selectedValue"
-                            class="border border-green-500 rounded px-1 cursor-pointer hover:border-red-500 hover:line-through max-w-30 truncate"
-                            type="button"
-                            @click="selectedValue.splice(index, 1)"
-                        >
-                            {{ item.data?.value }}
-                        </button>
-                    </div>
-                    <JSDropDown
-                        v-if="
-                            schemaNode.items?.type === 'number' ||
-                            schemaNode.items?.type === 'string' ||
-                            schemaNode.items?.type === 'number_or_string'
-                        "
-                        :type="schemaNode.items.type"
-                        :values="Array.from(schemaNode.items?.values ?? [])"
-                        @update="searchDropDownHandler"
+                    <JSObjectSelect
+                        :class="{ hidden: mapKey !== shownSelectedKey }"
+                        :json-merger="jsonMerger"
+                        :parent-node="schemaNode.items"
+                        :can-be-destroyed="true"
+                        @close="removeSelectedValue(mapKey)"
+                        @update="(input) => onObjectUpdateHandler(mapKey, input)"
                     />
                 </template>
-                <template v-if="schemaNode.items?.type === 'object'">
-                    <div class="flex gap-1">
-                        <button
-                            v-for="(item, index) of selectedValue"
-                            :key="item._id"
-                            :class="{
-                                'border-green-500': index === shownIndex,
-                                'border-secondary': index !== shownIndex,
-                            }"
-                            class="border rounded px-2 cursor-pointer hover:border-green-500"
-                            type="button"
-                            @click="shownIndex = index"
-                        >
-                            {{ index + 1 }}
-                        </button>
-                    </div>
-                    <template
-                        v-for="(item, index) of selectedValue"
-                        :key="item._id"
-                    >
-                        <JSObjectSelect
-                            :class="{ hidden: index !== shownIndex }"
-                            :json-merger="jsonMerger"
-                            :parent-node="schemaNode.items"
-                            :parent-result-model="item.data"
-                            :can-be-destroyed="true"
-                            @close="removeItem(index)"
-                            @update="updateHandler()"
-                        />
-                    </template>
-                </template>
-            </div>
+            </template>
         </div>
-        <SearchDropDown
-            :title="'SearchParameter'"
-            :values="operatorValues"
-            :on-key-stroke="true"
-            @update="onOperatorHandler"
-        />
     </div>
 </template>

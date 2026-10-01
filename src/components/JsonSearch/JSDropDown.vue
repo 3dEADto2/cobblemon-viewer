@@ -1,13 +1,17 @@
 <script lang="ts" setup>
 import { type SearchParameters } from './../../types';
 import SearchDropDown from './../SearchDropDown.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const { title, values, onKeyStroke, type } = defineProps<{
     type: 'string' | 'number' | 'number_or_string';
     title?: string;
     values?: any[];
     onKeyStroke?: boolean;
+}>();
+
+const emit = defineEmits<{
+    (e: 'update', data: SearchParameters | undefined): void;
 }>();
 
 const operatorValues =
@@ -17,9 +21,13 @@ const operatorValues =
 const operatorValue = ref<string | undefined>();
 const selectedValue = ref<string | number | undefined>();
 
-const emit = defineEmits<{
-    (e: 'update', data: SearchParameters | undefined): void;
-}>();
+const isValid = computed(() => {
+    return (
+        operatorValues.includes(operatorValue.value ?? '') &&
+        selectedValue.value !== undefined &&
+        selectedValue.value !== ''
+    );
+})
 
 const updateHandler = () => {
     let result = undefined;
@@ -52,18 +60,22 @@ const onOperatorHandler = (data: string | number | undefined) => {
 </script>
 
 <template>
-    <div class="flex gap-1">
+    <div class="flex border rounded" :class="{ 'border-green-500': isValid, 'border-secondary': !isValid }">
+        <div class="border-r border-secondary pr-1 mr-1">
+            <SearchDropDown
+                :title="title"
+                :values="values"
+                :options="{ onKeyStroke }"
+                @update="onSelectedHandler"
+                class="border-none"
+            />
+        </div>
         <SearchDropDown
-            :title="title"
-            :values="values"
-            :on-key-stroke="onKeyStroke"
-            @update="onSelectedHandler"
-        />
-        <SearchDropDown
-            :title="'SearchParameter'"
+            :title="'OP'"
             :values="operatorValues"
-            :on-key-stroke="true"
+            :options="{ inputDisabled: true }"
             @update="onOperatorHandler"
+            class="border-none"
         />
     </div>
 </template>
